@@ -1,0 +1,340 @@
+/**
+ * Global styles with CSS variables for theming
+ * Components use these variables for dynamic color customization
+ */
+
+:root {
+    /* Brand colors */
+    --brand-50: #f0f9ff;
+    --brand-100: #e0f2fe;
+    --brand-200: #bae6fd;
+    --brand-300: #7dd3fc;
+    --brand-400: #38bdf8;
+    --brand-500: #0ea5e9;
+    --brand-600: #0284c7;
+    --brand-700: #0369a1;
+    --brand-800: #075985;
+    --brand-900: #0c4a6e;
+
+    /* Neutral colors */
+    --neutral-50: #fafafa;
+    --neutral-100: #f5f5f5;
+    --neutral-200: #e5e5e5;
+    --neutral-300: #d4d4d4;
+    --neutral-400: #a3a3a3;
+    --neutral-500: #737373;
+    --neutral-600: #525252;
+    --neutral-700: #404040;
+    --neutral-800: #262626;
+    --neutral-900: #171717;
+
+    /* Semantic colors */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+
+    /* Background colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: var(--neutral-50);
+    --bg-tertiary: var(--neutral-100);
+
+    /* Text colors */
+    --text-primary: var(--neutral-900);
+    --text-secondary: var(--neutral-600);
+    --text-tertiary: var(--neutral-500);
+
+    /* Border colors */
+    --border-color: var(--neutral-200);
+    --border-color-hover: var(--neutral-300);
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+
+    /* Border radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    /* Transitions */
+    --transition-fast: 150ms ease-in-out;
+    --transition-base: 200ms ease-in-out;
+    --transition-slow: 300ms ease-in-out;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: var(--neutral-900);
+        --bg-secondary: var(--neutral-800);
+        --bg-tertiary: var(--neutral-700);
+        --text-primary: var(--neutral-50);
+        --text-secondary: var(--neutral-300);
+        --text-tertiary: var(--neutral-400);
+        --border-color: var(--neutral-700);
+        --border-color-hover: var(--neutral-600);
+    }
+}
+
+/* ============================================================================
+   Auth Form Styles
+   ============================================================================ */
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-xl);
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-form__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    text-align: center;
+}
+
+.auth-form__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.auth-form__subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.auth-form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.auth-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.auth-form__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.auth-form__input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast);
+    outline: none;
+}
+
+.auth-form__input:hover:not(:disabled) {
+    border-color: var(--border-color-hover);
+}
+
+.auth-form__input:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.auth-form__input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auth-form__input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.auth-form__error {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-error);
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.auth-form__success {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-success);
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-md);
+}
+
+.auth-form__link-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: calc(var(--spacing-sm) * -1);
+}
+
+.auth-form__link {
+    font-size: 0.875rem;
+    color: var(--brand-600);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.auth-form__link:hover:not(:disabled) {
+    color: var(--brand-700);
+    text-decoration: underline;
+}
+
+.auth-form__link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auth-form__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* ============================================================================
+   Auth Button Styles
+   ============================================================================ */
+
+.auth-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    outline: none;
+}
+
+.auth-button:focus-visible {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+}
+
+/* Primary variant */
+.auth-button--primary {
+    color: white;
+    background-color: var(--brand-600);
+    border-color: var(--brand-600);
+}
+
+.auth-button--primary:hover:not(:disabled) {
+    background-color: var(--brand-700);
+    border-color: var(--brand-700);
+}
+
+.auth-button--primary:active:not(:disabled) {
+    background-color: var(--brand-800);
+    border-color: var(--brand-800);
+}
+
+/* Secondary variant */
+.auth-button--secondary {
+    color: var(--text-primary);
+    background-color: var(--neutral-100);
+    border-color: var(--neutral-100);
+}
+
+.auth-button--secondary:hover:not(:disabled) {
+    background-color: var(--neutral-200);
+    border-color: var(--neutral-200);
+}
+
+/* Outline variant */
+.auth-button--outline {
+    color: var(--brand-600);
+    background-color: transparent;
+    border-color: var(--brand-600);
+}
+
+.auth-button--outline:hover:not(:disabled) {
+    background-color: var(--brand-50);
+}
+
+/* Full width */
+.auth-button--full-width {
+    width: 100%;
+}
+
+/* Disabled state */
+.auth-button--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Loading state */
+.auth-button--loading {
+    pointer-events: none;
+}
+
+.auth-button__spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: auth-button-spin 0.6s linear infinite;
+}
+
+.auth-button__text {
+    display: inline-block;
+}
+
+@keyframes auth-button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================================
+   Utility Classes
+   ============================================================================ */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
