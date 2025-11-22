@@ -1,112 +1,103 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search, Edit, Trash2, X, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, Loader2, Building2 } from 'lucide-react';
 import {
-  useCategories,
-  useCreateCategory,
-  useUpdateCategory,
-  useDeleteCategory,
-} from '@/hooks/useCategories';
-import type { Category, CreateCategoryInput } from '@/types/api';
+  useBrands,
+  useCreateBrand,
+  useUpdateBrand,
+  useDeleteBrand,
+} from '@/hooks/useBrands';
+import type { Brand, CreateBrandInput } from '@/types/api';
+import Image from 'next/image';
 
-export default function CategoriesPage() {
+export default function BrandsPage() {
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'tree' | 'flat'>('flat');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
 
   // Form state
-  const [formData, setFormData] = useState<Partial<CreateCategoryInput>>({
+  const [formData, setFormData] = useState<Partial<CreateBrandInput>>({
     name: '',
     description: '',
-    parentId: '',
-    icon: '',
+    logo: '',
+    website: '',
     status: 'active',
-    seoTitle: '',
-    seoDescription: '',
   });
 
   // Queries
-  const { data: categoriesData, isLoading } = useCategories({
-    flat: viewMode === 'flat',
+  const { data: brandsData, isLoading } = useBrands({
+    page,
+    limit: 20,
+    search: search || undefined,
+    status: statusFilter ? (statusFilter as 'active' | 'inactive') : undefined,
   });
 
   // Mutations
-  const createMutation = useCreateCategory();
-  const updateMutation = useUpdateCategory();
-  const deleteMutation = useDeleteCategory();
+  const createMutation = useCreateBrand();
+  const updateMutation = useUpdateBrand();
+  const deleteMutation = useDeleteBrand();
 
-  const categories = categoriesData?.data || [];
-
-  // Filter categories based on search
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const brands = brandsData?.data || [];
+  const meta = brandsData?.meta;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const data: CreateCategoryInput = {
+    const data: CreateBrandInput = {
       name: formData.name!,
       description: formData.description || undefined,
-      parentId: formData.parentId || undefined,
-      icon: formData.icon || undefined,
-      status: formData.status as 'active' | 'inactive' || 'active',
-      seoTitle: formData.seoTitle || undefined,
-      seoDescription: formData.seoDescription || undefined,
+      logo: formData.logo || undefined,
+      website: formData.website || undefined,
+      status: formData.status || 'active',
     };
 
-    if (editingCategory) {
-      await updateMutation.mutateAsync({ id: editingCategory._id, data });
+    if (editingBrand) {
+      await updateMutation.mutateAsync({ id: editingBrand._id, data });
     } else {
       await createMutation.mutateAsync(data);
     }
 
     setIsDialogOpen(false);
-    setEditingCategory(null);
+    setEditingBrand(null);
     setFormData({
       name: '',
       description: '',
-      parentId: '',
-      icon: '',
+      logo: '',
+      website: '',
       status: 'active',
-      seoTitle: '',
-      seoDescription: '',
     });
   };
 
-  const handleEdit = (category: Category) => {
-    setEditingCategory(category);
+  const handleEdit = (brand: Brand) => {
+    setEditingBrand(brand);
     setFormData({
-      name: category.name,
-      description: category.description,
-      parentId: category.parentId as string || '',
-      icon: category.icon,
-      status: category.status,
-      seoTitle: category.seoTitle,
-      seoDescription: category.seoDescription,
+      name: brand.name,
+      description: brand.description,
+      logo: brand.logo,
+      website: brand.website,
+      status: brand.status,
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
       await deleteMutation.mutateAsync(id);
     }
   };
 
   const handleCancel = () => {
     setIsDialogOpen(false);
-    setEditingCategory(null);
+    setEditingBrand(null);
     setFormData({
       name: '',
       description: '',
-      parentId: '',
-      icon: '',
+      logo: '',
+      website: '',
       status: 'active',
-      seoTitle: '',
-      seoDescription: '',
     });
   };
 
@@ -115,29 +106,25 @@ export default function CategoriesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Categories</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your product categories and hierarchy
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Brands</h1>
+          <p className="text-gray-600 mt-1">Manage your product brands</p>
         </div>
         <button
           onClick={() => {
-            setEditingCategory(null);
+            setEditingBrand(null);
             setFormData({
               name: '',
               description: '',
-              parentId: '',
-              icon: '',
+              logo: '',
+              website: '',
               status: 'active',
-              seoTitle: '',
-              seoDescription: '',
             });
             setIsDialogOpen(true);
           }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Category
+          Add Brand
         </button>
       </div>
 
@@ -146,19 +133,20 @@ export default function CategoriesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
-            placeholder="Search categories..."
+            placeholder="Search brands..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <select
-          value={viewMode}
-          onChange={(e) => setViewMode(e.target.value as 'tree' | 'flat')}
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
         >
-          <option value="flat">Flat List</option>
-          <option value="tree">Tree View</option>
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
         </select>
       </div>
 
@@ -169,16 +157,19 @@ export default function CategoriesPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Logo
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Slug
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Products
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Level
+                  Website
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -191,61 +182,86 @@ export default function CategoriesPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center">
+                  <td colSpan={7} className="px-6 py-8 text-center">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
-                    <p className="mt-2 text-sm text-gray-600">Loading categories...</p>
+                    <p className="mt-2 text-sm text-gray-600">Loading brands...</p>
                   </td>
                 </tr>
-              ) : filteredCategories.length === 0 ? (
+              ) : brands.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center">
-                    <p className="text-sm text-gray-600">No categories found</p>
+                  <td colSpan={7} className="px-6 py-8 text-center">
+                    <Building2 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-sm text-gray-600">No brands found</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Get started by creating your first brand
+                    </p>
                   </td>
                 </tr>
               ) : (
-                filteredCategories.map((category) => (
-                  <tr key={category._id} className="hover:bg-gray-50">
+                brands.map((brand) => (
+                  <tr key={brand._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {category.icon && <span className="text-xl">{category.icon}</span>}
-                        <span className="text-sm font-medium text-gray-900">{category.name}</span>
-                      </div>
+                      {brand.logo ? (
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+                          <Image
+                            src={brand.logo}
+                            alt={brand.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                          <Building2 className="w-6 h-6 text-gray-400" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-medium text-gray-900">{brand.name}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-600">{brand.slug}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600 max-w-md truncate block">
-                        {category.description || '-'}
+                        {brand.description || '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                        {category.productCount}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                        Level {category.level}
-                      </span>
+                      {brand.website ? (
+                        <a
+                          href={brand.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:text-blue-800 truncate max-w-xs block"
+                        >
+                          {brand.website}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          category.status === 'active'
+                          brand.status === 'active'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {category.status}
+                        {brand.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleEdit(category)}
+                        onClick={() => handleEdit(brand)}
                         className="text-blue-600 hover:text-blue-900 mr-3"
                       >
                         <Edit className="w-4 h-4 inline" />
                       </button>
                       <button
-                        onClick={() => handleDelete(category._id)}
+                        onClick={() => handleDelete(brand._id, brand.name)}
                         disabled={deleteMutation.isPending}
                         className="text-red-600 hover:text-red-900 disabled:opacity-50"
                       >
@@ -260,6 +276,29 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      {/* Pagination */}
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-600">
+            Page {page} of {meta.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+            disabled={page === meta.totalPages}
+            className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {/* Create/Edit Modal */}
       {isDialogOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -268,12 +307,12 @@ export default function CategoriesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {editingCategory ? 'Edit Category' : 'Create Category'}
+                    {editingBrand ? 'Edit Brand' : 'Create Brand'}
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    {editingCategory
-                      ? 'Update category information'
-                      : 'Add a new category to your store'}
+                    {editingBrand
+                      ? 'Update brand information'
+                      : 'Add a new brand to your store'}
                   </p>
                 </div>
                 <button
@@ -286,35 +325,19 @@ export default function CategoriesPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Name *
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder="Electronics"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="icon" className="block text-sm font-medium text-gray-700">
-                    Icon
-                  </label>
-                  <input
-                    id="icon"
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    placeholder="📱"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name *
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  placeholder="Nike"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
 
               <div className="space-y-2">
@@ -325,7 +348,7 @@ export default function CategoriesPage() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Category description..."
+                  placeholder="Brand description..."
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -333,68 +356,49 @@ export default function CategoriesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="parentId" className="block text-sm font-medium text-gray-700">
-                    Parent Category
+                  <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
+                    Logo URL
                   </label>
-                  <select
-                    id="parentId"
-                    value={formData.parentId}
-                    onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
+                  <input
+                    id="logo"
+                    type="url"
+                    value={formData.logo}
+                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                    placeholder="https://example.com/logo.png"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">None (Root Category)</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                    Status
+                  <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                    Website
                   </label>
-                  <select
-                    id="status"
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })
-                    }
+                  <input
+                    id="website"
+                    type="url"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    placeholder="https://example.com"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="seoTitle" className="block text-sm font-medium text-gray-700">
-                  SEO Title
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                  Status
                 </label>
-                <input
-                  id="seoTitle"
-                  type="text"
-                  value={formData.seoTitle}
-                  onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                  placeholder="Best Electronics 2024"
+                <select
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="seoDescription" className="block text-sm font-medium text-gray-700">
-                  SEO Description
-                </label>
-                <textarea
-                  id="seoDescription"
-                  value={formData.seoDescription}
-                  onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                  placeholder="Shop the latest electronics..."
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
@@ -415,7 +419,7 @@ export default function CategoriesPage() {
                   )}
                   {createMutation.isPending || updateMutation.isPending
                     ? 'Saving...'
-                    : editingCategory
+                    : editingBrand
                     ? 'Update'
                     : 'Create'}
                 </button>
@@ -427,3 +431,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+

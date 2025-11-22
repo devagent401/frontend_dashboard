@@ -74,7 +74,7 @@ export function Login({ onSwitchToSignUp, onSwitchToGoogleSignUp, onLogin }: Log
                                 {...register('password', {
                                     required: 'Password is required',
                                     minLength: {
-                                        value: 6,
+                                        value: 1,
                                         message: 'Password must be at least 6 characters'
                                     }
                                 })}

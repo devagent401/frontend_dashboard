@@ -60,6 +60,19 @@ export const menuData: MenuItem[] = [
         ],
     },
     {
+        id: 'brands',
+        label: 'Brands',
+        icon: 'Building2',
+        children: [
+            {
+                id: 'brand-list',
+                label: 'All Brands',
+                icon: 'List',
+                href: '/dashboard/brands',
+            },
+        ],
+    },
+    {
         id: 'orders',
         label: 'Orders',
         icon: 'ShoppingCart',

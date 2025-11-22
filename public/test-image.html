@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+</head>
+<body>
+    <h1>Testing Image from Backend</h1>
+    
+    <h2>1. Using regular img tag:</h2>
+    <img 
+        src="http://localhost:5000/api/v1/upload/preview/1763568028900-redzJtvALj-1533_20141.webp" 
+        alt="Test"
+        style="width: 300px; border: 2px solid red;"
+        onload="console.log('✅ Image loaded successfully!')"
+        onerror="console.error('❌ Image failed to load!')"
+    />
+    
+    <h2>2. Image Info:</h2>
+    <p>URL: <code>http://localhost:5000/api/v1/upload/preview/1763568028900-redzJtvALj-1533_20141.webp</code></p>
+    <p>Check your browser console for load status.</p>
+    
+    <script>
+        // Test if URL is accessible
+        fetch('http://localhost:5000/api/v1/upload/preview/1763568028900-redzJtvALj-1533_20141.webp')
+            .then(response => {
+                console.log('📡 Fetch Response:', response.status, response.statusText);
+                console.log('📋 Content-Type:', response.headers.get('Content-Type'));
+                if (response.ok) {
+                    console.log('✅ Image is accessible via fetch!');
+                } else {
+                    console.error('❌ Image fetch failed:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Network error:', error);
+            });
+    </script>
+</body>
+</html>
+

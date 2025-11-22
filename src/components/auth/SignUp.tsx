@@ -131,13 +131,13 @@ export function SignUp({ onSwitchToLogin, onSwitchToGoogleSignUp, onSignUp }: Si
                                 {...register('password', {
                                     required: 'Password is required',
                                     minLength: {
-                                        value: 8,
+                                        value: 2,
                                         message: 'Password must be at least 8 characters'
                                     },
-                                    pattern: {
-                                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                                        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-                                    }
+                                    // pattern: {
+                                    //     value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                                    //     message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                                    // }
                                 })}
                             />
                             <button

@@ -3,66 +3,130 @@ import {
   ApiResponse,
   Product,
   CreateProductInput,
-  PaginationParams,
+  UpdateProductInput,
+  ProductQueryParams,
+  StockAdjustment,
+  StockAdjustmentResponse,
 } from '@/types/api';
 
+/**
+ * Products Service - Comprehensive API integration for Product operations
+ * Based on API Documentation /api/v1/products endpoints
+ */
 export const productsService = {
-  // Get all products
-  getProducts: async (params?: PaginationParams & {
-    search?: string;
-    categoryId?: string;
-    status?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    sortBy?: string;
-    order?: 'asc' | 'desc';
-  }): Promise<ApiResponse<Product[]>> => {
-    const response = await apiClient.get<ApiResponse<Product[]>>('/products', { params });
+  /**
+   * Get all products with filtering, sorting, and pagination
+   * @param params - Query parameters for filtering and pagination
+   * @returns Promise with products list and pagination metadata
+   */
+  getProducts: async (
+    params?: ProductQueryParams
+  ): Promise<ApiResponse<Product[]>> => {
+    const response = await apiClient.get<ApiResponse<Product[]>>('/products', {
+      params,
+    });
     return response.data;
   },
 
-  // Get product by ID
-  getProduct: async (id: string): Promise<Product> => {
-    const response = await apiClient.get<ApiResponse<Product>>(`/products/${id}`);
+  /**
+   * Get a single product by ID
+   * @param id - Product ID
+   * @returns Promise with product details
+   */
+  getProductById: async (id: string): Promise<Product> => {
+    const response = await apiClient.get<ApiResponse<Product>>(
+      `/products/${id}`
+    );
     return response.data.data!;
   },
 
-  // Get product by barcode
-  getProductByBarcode: async (barcode: string): Promise<Product> => {
-    const response = await apiClient.get<ApiResponse<Product>>(`/products/barcode/${barcode}`);
+  /**
+   * Get a product by slug (for public-facing URLs)
+   * @param slug - Product slug
+   * @returns Promise with product details
+   */
+  getProductBySlug: async (slug: string): Promise<Product> => {
+    const response = await apiClient.get<ApiResponse<Product>>(
+      `/products/slug/${slug}`
+    );
     return response.data.data!;
   },
 
-  // Create product
+  /**
+   * Get a product by barcode (useful for POS systems)
+   * @param barcode - Product barcode
+   * @returns Promise with product details
+   */
+  getProductByBarcode: async (barcode: string): Promise<Partial<Product>> => {
+    const response = await apiClient.get<ApiResponse<Partial<Product>>>(
+      `/products/barcode/${barcode}`
+    );
+    return response.data.data!;
+  },
+
+  /**
+   * Get products with low stock or out of stock
+   * @returns Promise with low stock products
+   */
+  getLowStockProducts: async (): Promise<Product[]> => {
+    const response = await apiClient.get<ApiResponse<Product[]>>(
+      '/products/stock/low'
+    );
+    return response.data.data!;
+  },
+
+  /**
+   * Create a new product
+   * @param data - Product data
+   * @returns Promise with created product
+   */
   createProduct: async (data: CreateProductInput): Promise<Product> => {
-    const response = await apiClient.post<ApiResponse<Product>>('/products', data);
+    const response = await apiClient.post<ApiResponse<Product>>(
+      '/products',
+      data
+    );
     return response.data.data!;
   },
 
-  // Update product
-  updateProduct: async (id: string, data: Partial<CreateProductInput>): Promise<Product> => {
-    const response = await apiClient.put<ApiResponse<Product>>(`/products/${id}`, data);
+  /**
+   * Update an existing product
+   * @param id - Product ID
+   * @param data - Partial product data to update
+   * @returns Promise with updated product
+   */
+  updateProduct: async (
+    id: string,
+    data: UpdateProductInput
+  ): Promise<Product> => {
+    const response = await apiClient.put<ApiResponse<Product>>(
+      `/products/${id}`,
+      data
+    );
     return response.data.data!;
   },
 
-  // Delete product
+  /**
+   * Delete a product (soft delete by default)
+   * @param id - Product ID
+   * @returns Promise<void>
+   */
   deleteProduct: async (id: string): Promise<void> => {
     await apiClient.delete(`/products/${id}`);
   },
 
-  // Update stock
-  updateStock: async (id: string, stockQuantity: number, damagedQuantity?: number): Promise<Product> => {
-    const response = await apiClient.patch<ApiResponse<Product>>(`/products/${id}/stock`, {
-      stockQuantity,
-      damagedQuantity,
-    });
-    return response.data.data!;
-  },
-
-  // Get low stock products
-  getLowStockProducts: async (): Promise<Product[]> => {
-    const response = await apiClient.get<ApiResponse<Product[]>>('/products/stock/low');
+  /**
+   * Adjust product stock quantity
+   * @param id - Product ID
+   * @param adjustment - Stock adjustment data
+   * @returns Promise with adjustment result
+   */
+  adjustStock: async (
+    id: string,
+    adjustment: StockAdjustment
+  ): Promise<StockAdjustmentResponse> => {
+    const response = await apiClient.post<
+      ApiResponse<StockAdjustmentResponse>
+    >(`/products/${id}/stock`, adjustment);
     return response.data.data!;
   },
 };
-

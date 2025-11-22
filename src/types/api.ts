@@ -74,52 +74,213 @@ export interface AuthResponse {
 }
 
 // ============================================================================
-// Product Types
+// Product Types (Matching API Documentation)
 // ============================================================================
+
+export interface ProductImage {
+  url: string;
+  alt?: string;
+  order?: number;
+}
+
+export interface ProductColor {
+  name: string;
+  hex: string;
+  sku?: string;
+}
+
+export interface ProductAttribute {
+  name: string;
+  value: string;
+}
+
+export interface ProductDiscount {
+  type: 'percent' | 'fixed';
+  value: number;
+  start_at?: string;
+  end_at?: string;
+}
+
+export interface ProductVatTax {
+  type: 'percent' | 'fixed';
+  value: number;
+}
+
+export interface CategorySnapshot {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface Brand {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BrandSnapshot {
+  id: string;
+  name: string;
+}
+
+export interface CreateBrandInput {
+  name: string;
+  slug?: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  status?: 'active' | 'inactive';
+}
+
+export interface UpdateBrandInput extends Partial<CreateBrandInput> { }
+
+export interface SellerDetails {
+  _id: string;
+  name: string;
+  logo?: string;
+  rating?: number;
+}
+
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
 
 export interface Product {
   _id: string;
   name: string;
   slug: string;
   description?: string;
-  price: number;
-  costPrice?: number;
-  categoryId?: Category;
-  sku?: string;
-  barcode: string;
-  stockQuantity: number;
-  soldQuantity: number;
-  damagedQuantity: number;
-  minStockLevel: number;
-  maxStockLevel?: number;
+  sku: string;
   unit: string;
-  images: string[];
-  status: 'active' | 'inactive' | 'draft' | 'out_of_stock';
-  tags: string[];
-  attributes: Record<string, any>;
-  supplierId?: Supplier;
-  views: number;
-  rating: number;
-  reviewCount: number;
+  unit_price: number;
+  quantity: number;
+  stock_status: StockStatus;
+  category?: string;
+  category_snapshot?: CategorySnapshot;
+  brand?: string;
+  brand_snapshot?: BrandSnapshot;
+  seller?: string;
+  is_in_house?: boolean;
+  seller_details?: SellerDetails;
+  thumbnail_image?: ProductImage;
+  gallery_images?: ProductImage[];
+  publish: boolean;
+  is_featured?: boolean;
+  tags?: string[];
+  discount?: ProductDiscount;
+  vat_tax?: ProductVatTax;
+  free_shipping?: boolean;
+  shipping_cost?: number;
+  colors?: ProductColor[];
+  attributes?: ProductAttribute[];
+  meta_title?: string;
+  meta_description?: string;
+  barcode?: string;
+  low_stock_quantity?: number;
+  cash_on_delivery?: boolean;
+  is_todays_deal?: boolean;
+  views?: number;
+  rating?: number;
+  review_count?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateProductInput {
   name: string;
+  sku: string;
+  unit: string;
+  unit_price: number;
   description?: string;
-  price: number;
-  costPrice?: number;
-  categoryId?: string;
-  sku?: string;
-  barcode?: string;
-  stockQuantity?: number;
-  minStockLevel?: number;
-  unit?: string;
-  images?: string[];
-  status?: 'active' | 'inactive' | 'draft';
+  category?: string;
+  brand?: string;
+  seller?: string | null;
+  is_in_house?: boolean;
+  quantity?: number;
+  low_stock_quantity?: number;
+  publish?: boolean;
+  is_featured?: boolean;
   tags?: string[];
-  attributes?: Record<string, any>;
+  thumbnail_image?: ProductImage;
+  gallery_images?: ProductImage[];
+  discount?: ProductDiscount;
+  vat_tax?: ProductVatTax;
+  shipping_cost?: number;
+  free_shipping?: boolean;
+  colors?: ProductColor[];
+  attributes?: ProductAttribute[];
+  barcode?: string;
+  meta_title?: string;
+  meta_description?: string;
+  cash_on_delivery?: boolean;
+  is_todays_deal?: boolean;
+}
+
+export interface UpdateProductInput extends Partial<CreateProductInput> { }
+
+export interface ProductQueryParams extends PaginationParams {
+  q?: string;
+  category?: string;
+  brand?: string;
+  seller?: string;
+  min_price?: number;
+  max_price?: number;
+  tags?: string | string[];
+  publish?: boolean;
+  featured?: boolean;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface StockAdjustment {
+  change: number;
+  type: 'in' | 'out' | 'adjustment';
+  reason?: string;
+  reference?: string;
+}
+
+export interface StockAdjustmentResponse {
+  product: {
+    _id: string;
+    quantity: number;
+    stock_status: StockStatus;
+  };
+  movement: {
+    type: string;
+    previous_quantity: number;
+    new_quantity: number;
+    change: number;
+  };
+}
+
+// ============================================================================
+// Upload Types (Matching API Documentation)
+// ============================================================================
+
+export type FileCategory = 'image' | 'video' | 'document' | 'audio' | 'other';
+
+export interface UploadedFile {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  previewUrl: string;
+  category: FileCategory;
+  metadata?: Record<string, any>;
+  uploadedBy?: User | string;
+  uploadedAt: string;
+  updatedAt: string;
+}
+
+export interface UploadQueryParams extends PaginationParams {
+  category?: FileCategory;
+  search?: string;
 }
 
 // ============================================================================

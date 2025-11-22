@@ -46,7 +46,7 @@ export function ResetPasswordForm({
                 return;
             }
 
-            if (newPassword.length < 8) {
+            if (newPassword.length < 2) {
                 setValidationError('Password must be at least 8 characters');
                 return;
             }

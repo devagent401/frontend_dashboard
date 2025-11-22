@@ -1,4 +1,4 @@
-import apiClient, { setAccessToken, clearTokens, getAccessToken } from '@/lib/api-client';
+import apiClient, { setTokens, clearTokens, getAccessToken, getRefreshToken } from '@/lib/api-client';
 import { storageAdapter } from '@/utils/storage';
 import {
   ApiResponse,
@@ -86,21 +86,24 @@ export const authService = {
     return response.data.data!;
   },
 
-  // Refresh token
-  refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
-    const response = await apiClient.post<ApiResponse<AuthResponse>>(
-      '/auth/refresh',
-      { refreshToken }
-    );
-    const { accessToken, refreshToken: newRefreshToken, user } = response.data.data!;
-
-    // Update tokens in cookies
-    storageAdapter.setItem('access_token', accessToken);
-    if (newRefreshToken) {
-      storageAdapter.setItem('refresh_token', newRefreshToken);
+  // Refresh token (Note: This is handled automatically by the API client interceptor)
+  // This method is here for manual refresh if needed
+  refreshToken: async (): Promise<{ accessToken: string; refreshToken: string }> => {
+    const currentRefreshToken = getRefreshToken();
+    if (!currentRefreshToken) {
+      throw new Error('No refresh token available');
     }
 
-    return { user, accessToken, refreshToken: newRefreshToken || refreshToken };
+    const response = await apiClient.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+      '/auth/refresh',
+      { refreshToken: currentRefreshToken }
+    );
+    const { accessToken, refreshToken: newRefreshToken } = response.data.data!;
+
+    // Update tokens
+    setTokens(accessToken, newRefreshToken);
+
+    return { accessToken, refreshToken: newRefreshToken };
   },
 
   // Change password

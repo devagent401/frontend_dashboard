@@ -5,6 +5,7 @@ import { QueryProvider } from '../../lib/query-client';
 import { AuthProvider } from '@/contexts/AuthProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
+import SessionExpiryHandler from '@/components/SessionExpiryHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
             <ThemeProvider>
               {children}
               <Toaster />
+              <SessionExpiryHandler />
             </ThemeProvider>
           </AuthProvider>
         </QueryProvider>

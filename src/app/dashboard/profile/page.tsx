@@ -7,7 +7,7 @@ import { User, Mail, Phone, MapPin, Calendar, Lock, Eye, EyeOff, Camera, Save } 
 export default function ProfilePage() {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-    
+
     // Profile form state
     const [profileData, setProfileData] = useState({
         name: user?.name || 'John Doe',
@@ -64,14 +64,14 @@ export default function ProfilePage() {
 
     const handlePasswordSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Validation
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert('New passwords do not match!');
             return;
         }
 
-        if (passwordData.newPassword.length < 8) {
+        if (passwordData.newPassword.length < 2) {
             alert('Password must be at least 8 characters long!');
             return;
         }
@@ -79,7 +79,7 @@ export default function ProfilePage() {
         // API call to change password
         console.log('Password change requested');
         alert('Password changed successfully!');
-        
+
         // Reset form
         setPasswordData({
             currentPassword: '',
@@ -107,21 +107,19 @@ export default function ProfilePage() {
                 <div className="flex gap-4">
                     <button
                         onClick={() => setActiveTab('profile')}
-                        className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-                            activeTab === 'profile'
+                        className={`px-4 py-2 font-medium transition-colors border-b-2 ${activeTab === 'profile'
                                 ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
                                 : 'border-transparent text-[var(--color-textSecondary)] hover:text-[var(--color-text)]'
-                        }`}
+                            }`}
                     >
                         Profile Information
                     </button>
                     <button
                         onClick={() => setActiveTab('password')}
-                        className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-                            activeTab === 'password'
+                        className={`px-4 py-2 font-medium transition-colors border-b-2 ${activeTab === 'password'
                                 ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
                                 : 'border-transparent text-[var(--color-textSecondary)] hover:text-[var(--color-text)]'
-                        }`}
+                            }`}
                     >
                         Change Password
                     </button>
@@ -279,7 +277,7 @@ export default function ProfilePage() {
                             <Lock className="w-5 h-5" />
                             Change Password
                         </h2>
-                        
+
                         <div className="space-y-4 max-w-md">
                             {/* Current Password */}
                             <div>

@@ -1,65 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productsService } from '@/services/products.service';
-import { Product } from '@/types/api';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, Edit, Trash, Package, Search, Filter } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
 import { formatCurrency } from '@/lib/utils';
+import type { Product } from '@/types/api';
 
 export default function ProductsPage() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [publishFilter, setPublishFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
-  // Fetch products
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['products', page, search, statusFilter],
-    queryFn: () =>
-      productsService.getProducts({
-        page,
-        limit: 12,
-        search: search || undefined,
-        status: statusFilter || undefined,
-      }),
+  // Fetch products with filters
+  const { data, isLoading, error } = useProducts({
+    page,
+    limit: 12,
+    q: search || undefined,
+    publish: publishFilter ? publishFilter === 'true' : undefined,
+    category: categoryFilter || undefined,
   });
 
   // Delete product mutation
-  const deleteMutation = useMutation({
-    mutationFn: productsService.deleteProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      toast({
-        title: 'Success',
-        description: 'Product deleted successfully',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete product',
-        variant: 'destructive',
-      });
-    },
-  });
+  const deleteProductMutation = useDeleteProduct();
 
-  const getStatusBadge = (status: string) => {
+  const getStockBadge = (stockStatus: string) => {
     const styles = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
+      in_stock: 'bg-green-100 text-green-800',
+      low_stock: 'bg-yellow-100 text-yellow-800',
       out_of_stock: 'bg-red-100 text-red-800',
-      draft: 'bg-yellow-100 text-yellow-800',
     };
-    return styles[status as keyof typeof styles] || styles.draft;
+    return styles[stockStatus as keyof typeof styles] || styles.out_of_stock;
+  };
+
+  const getStockLabel = (stockStatus: string) => {
+    const labels = {
+      in_stock: 'In Stock',
+      low_stock: 'Low Stock',
+      out_of_stock: 'Out of Stock',
+    };
+    return labels[stockStatus as keyof typeof labels] || 'Unknown';
   };
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
-      deleteMutation.mutate(id);
+      deleteProductMutation.mutate(id);
     }
   };
 
@@ -72,7 +59,6 @@ export default function ProductsPage() {
       </div>
     );
   }
-
   return (
     <div className="p-6">
       {/* Header */}
@@ -81,13 +67,13 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-600 mt-1">Manage your product inventory</p>
         </div>
-        <a
+        <Link
           href="/dashboard/products/create"
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Product
-        </a>
+        </Link>
       </div>
 
       {/* Filters */}
@@ -104,15 +90,13 @@ export default function ProductsPage() {
             />
           </div>
           <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={publishFilter}
+            onChange={(e) => setPublishFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="out_of_stock">Out of Stock</option>
-            <option value="draft">Draft</option>
+            <option value="true">Published</option>
+            <option value="false">Unpublished</option>
           </select>
         </div>
       </div>
@@ -144,95 +128,149 @@ export default function ProductsPage() {
               <p className="text-gray-600 mb-6">
                 Get started by creating your first product
               </p>
-              <a
+              <Link
                 href="/dashboard/products/create"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4" />
                 Add Product
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {data.data.map((product: Product) => (
-                <div
-                  key={product._id}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-                >
-                  {/* Product Image */}
-                  <div className="relative">
-                    <img
-                      src={product.images[0] || '/placeholder.png'}
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <span
-                      className={`absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded ${getStatusBadge(
-                        product.status
-                      )}`}
-                    >
-                      {product.status}
-                    </span>
-                  </div>
+              {data.data.map((product: Product) => {
+                const imageUrl =
+                  product.thumbnail_image?.url ||
+                  product.gallery_images?.[0]?.url ||
+                  'https://via.placeholder.com/400x300?text=No+Image';
 
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1 truncate">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-                      {product.description || 'No description'}
-                    </p>
+                const imageAlt =
+                  product.thumbnail_image?.alt ||
+                  product.gallery_images?.[0]?.alt ||
+                  product.name;
 
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <span className="text-xl font-bold text-gray-900">
-                        {formatCurrency(product.price)}
+                return (
+                  <div
+                    key={product._id}
+                    className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+                  >
+                    {/* Product Image */}
+                    <div className="relative w-full h-48 bg-gray-100">
+                      <Image
+                        src={imageUrl}
+                        alt={imageAlt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        className="object-cover rounded-t-lg"
+                        unoptimized
+
+                      />
+                      <span
+                        className={`absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded ${getStockBadge(
+                          product.stock_status
+                        )}`}
+                      >
+                        {getStockLabel(product.stock_status)}
                       </span>
-                      {product.costPrice && (
-                        <span className="text-sm text-gray-500 line-through">
-                          {formatCurrency(product.costPrice)}
+                      {product.is_featured && (
+                        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-semibold rounded bg-purple-100 text-purple-800">
+                          Featured
                         </span>
                       )}
                     </div>
 
-                    {/* Stock Info */}
-                    <div className="flex items-center justify-between text-sm mb-4">
-                      <span
-                        className={`${
-                          product.stockQuantity <= product.minStockLevel
+                    {/* Product Info */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="font-semibold text-gray-900 truncate flex-1">
+                          {product.name}
+                        </h3>
+                        {!product.publish && (
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-gray-200 text-gray-600 rounded">
+                            Draft
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-gray-500 mb-2">
+                        SKU: {product.sku}
+                      </p>
+
+                      {product.description && (
+                        <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-xl font-bold text-gray-900">
+                          {formatCurrency(product.unit_price)}
+                        </span>
+                        {product.discount && (
+                          <span className="text-sm text-green-600 font-semibold">
+                            -{product.discount.value}
+                            {product.discount.type === 'percent' ? '%' : ' off'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stock Info */}
+                      <div className="flex items-center justify-between text-sm mb-4">
+                        <span
+                          className={`${product.quantity <=
+                            (product.low_stock_quantity || 0)
                             ? 'text-red-600 font-semibold'
                             : 'text-gray-600'
-                        }`}
-                      >
-                        Stock: {product.stockQuantity}
-                      </span>
-                      {product.stockQuantity <= product.minStockLevel && (
-                        <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                          Low Stock
+                            }`}
+                        >
+                          Stock: {product.quantity} {product.unit}
                         </span>
-                      )}
-                    </div>
+                        {product.quantity <=
+                          (product.low_stock_quantity || 0) &&
+                          product.quantity > 0 && (
+                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+                              Low Stock
+                            </span>
+                          )}
+                      </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <a
-                        href={`/dashboard/products/${product._id}`}
-                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </a>
-                      <button
-                        onClick={() => handleDelete(product._id, product.name)}
-                        disabled={deleteMutation.isPending}
-                        className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-colors disabled:opacity-50"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </button>
+                      {/* Category & Brand */}
+                      {(product.category_snapshot || product.brand_snapshot) && (
+                        <div className="flex flex-wrap gap-2 mb-4 text-xs">
+                          {product.category_snapshot && (
+                            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded">
+                              {product.category_snapshot.name}
+                            </span>
+                          )}
+                          {product.brand_snapshot && (
+                            <span className="px-2 py-1 bg-purple-50 text-purple-600 rounded">
+                              {product.brand_snapshot.name}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/dashboard/products/${product._id}`}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(product._id, product.name)}
+                          disabled={deleteProductMutation.isPending}
+                          className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-colors disabled:opacity-50"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -240,7 +278,7 @@ export default function ProductsPage() {
           {data.meta && data.meta.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-8">
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -250,7 +288,9 @@ export default function ProductsPage() {
                 Page {page} of {data.meta.totalPages}
               </span>
               <button
-                onClick={() => setPage(p => Math.min(data.meta!.totalPages, p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(data.meta!.totalPages, p + 1))
+                }
                 disabled={page === data.meta.totalPages}
                 className="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
